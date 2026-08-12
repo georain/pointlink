@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PointLink · 桌面小组件</title>
+  <style>
+    /* 全局重置 & 字体 — SF Pro (iOS 26 系统字体) */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+      background: #f5f5f7;
+      color: #1c1c1e;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.3s ease;
+      padding: 16px;
+      margin: 0;
+    }
+
+    /* 深色模式 — 优雅深邃 */
+    body.dark-mode {
+      background: #0b0b0d;
+      color: #f5f5f7;
+    }
+
+    /* ----- 小组件容器：桌面小组件风格 (圆角、玻璃、精致) ----- */
+    .clock-container {
+      max-width: 800px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border-radius: 48px;
+      padding: 36px 28px 40px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.02);
+      transition: background 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                  box-shadow 0.4s ease,
+                  backdrop-filter 0.3s ease;
+      border: 0.5px solid rgba(255, 255, 255, 0.25);
+      text-align: center;
+      /* 小组件特有：更紧凑的内边距，适合桌面摆放 */
+    }
+
+    /* 深色模式下卡片玻璃质感加深 */
+    body.dark-mode .clock-container {
+      background: rgba(22, 22, 26, 0.82);
+      backdrop-filter: blur(28px) saturate(200%);
+      -webkit-backdrop-filter: blur(28px) saturate(200%);
+      box-shadow: 0 20px 56px rgba(0, 0, 0, 0.7), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.04);
+    }
+
+    /* 品牌名 PointLink — 精致小字 */
+    .brand-name {
+      font-size: 1.1rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 6px;
+      transition: opacity 0.3s ease, color 0.3s ease;
+      font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+    }
+
+    body.dark-mode .brand-name {
+      opacity: 0.6;
+    }
+
+    /* 时间主显示 — 大、清晰、优雅，横屏友好 */
+    .time-display {
+      font-size: 5.4rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+      transition: color 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .time-display .seconds {
+      font-size: 2.2rem;
+      font-weight: 400;
+      opacity: 0.65;
+      margin-left: 4px;
+      letter-spacing: 0.01em;
+      transition: opacity 0.3s ease;
+    }
+
+    /* 日期显示 — 精致小字 */
+    .date-display {
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      opacity: 0.65;
+      margin-bottom: 28px;
+      transition: opacity 0.3s ease, color 0.3s ease;
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 控制栏：模式切换 + 图标 (iOS 26 风格) */
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    /* 纯图标按钮 — 无 emoji，使用 SF Symbols 风格字形 */
+    .mode-toggle {
+      background: rgba(120, 120, 128, 0.10);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 0.5px solid rgba(60, 60, 67, 0.06);
+      border-radius: 40px;
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      font-weight: 450;
+      color: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      min-width: 100px;
+      letter-spacing: 0.02em;
+      font-family: inherit;
+      line-height: 1;
+    }
+
+    .mode-toggle:active {
+      transform: scale(0.94);
+      background: rgba(120, 120, 128, 0.18);
+    }
+
+    /* 深色模式下的按钮 */
+    body.dark-mode .mode-toggle {
+      background: rgba(235, 235, 245, 0.06);
+      border-color: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    body.dark-mode .mode-toggle:active {
+      background: rgba(235, 235, 245, 0.14);
+    }
+
+    /* 图标文字 — 模拟 SF Symbols (iOS 26) 不使用 emoji */
+    .icon-symbol {
+      display: inline-block;
+      font-size: 1.2rem;
+      line-height: 1;
+      font-weight: 300;
+      letter-spacing: 0;
+      opacity: 0.9;
+      transition: transform 0.2s ease;
+    }
+
+    /* 模式切换的文本 */
+    .mode-label {
+      font-size: 0.9rem;
+      font-weight: 450;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+
+    /* 响应式 + 横屏优化 + 小组件尺寸适配 */
+    @media (max-width: 600px) {
+      .clock-container {
+        padding: 28px 18px 32px;
+        border-radius: 40px;
+      }
+      .time-display {
+        font-size: 4rem;
+      }
+      .time-display .seconds {
+        font-size: 1.8rem;
+        margin-left: 3px;
+      }
+      .date-display {
+        font-size: 0.9rem;
+        margin-bottom: 22px;
+      }
+      .mode-toggle {
+        padding: 10px 16px;
+        min-width: 80px;
+        font-size: 1rem;
+      }
+      .icon-symbol {
+        font-size: 1rem;
+      }
+      .brand-name {
+        font-size: 0.95rem;
+        letter-spacing: 0.15em;
+        margin-bottom: 4px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .time-display {
+        font-size: 3rem;
+      }
+      .time-display .seconds {
+        font-size: 1.3rem;
+      }
+      .clock-container {
+        padding: 22px 14px 26px;
+        border-radius: 32px;
+      }
+    }
+
+    /* 横屏特别优化：宽屏下加大字体，保持舒适比例 (桌面小组件横屏) */
+    @media (orientation: landscape) and (min-width: 700px) {
+      .clock-container {
+        max-width: 900px;
+        padding: 42px 44px 46px;
+        border-radius: 56px;
+      }
+      .time-display {
+        font-size: 7rem;
+      }
+      .time-display .seconds {
+        font-size: 3rem;
+      }
+      .date-display {
+        font-size: 1.2rem;
+        margin-bottom: 34px;
+      }
+      .brand-name {
+        font-size: 1.4rem;
+        letter-spacing: 0.25em;
+        margin-bottom: 10px;
+      }
+      .mode-toggle {
+        padding: 14px 28px;
+        min-width: 130px;
+        font-size: 1.2rem;
+        gap: 12px;
+      }
+      .icon-symbol {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* 过渡动画 — 所有变动均带有细腻缓动 */
+    .clock-container, .time-display, .date-display, .mode-toggle, .icon-symbol, .mode-label, .brand-name {
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* 极简装饰 — 顶部细线 (增加层次，小组件风格) */
+    .clock-container::before {
+      content: '';
+      display: block;
+      width: 50px;
+      height: 4px;
+      background: rgba(60, 60, 67, 0.08);
+      border-radius: 40px;
+      margin: 0 auto 16px auto;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    body.dark-mode .clock-container::before {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* 秒钟冒号装饰 (无 emoji) */
+    .colon-sep {
+      font-weight: 300;
+      opacity: 0.4;
+      margin: 0 1px;
+    }
+
+    /* 横屏下顶部装饰线略微调整 */
+    @media (orientation: landscape) and (min-width: 700px) {
+      .clock-container::before {
+        width: 72px;
+        height: 5px;
+        margin-bottom: 20px;
+      }
+    }
+
+    /* ----- 桌面小组件额外特性：可拖拽感 (视觉提示) ----- */
+    .clock-container {
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* 模拟小组件 “摆放” 的微光晕 */
+    .clock-container::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 48px;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.3);
+      transition: opacity 0.3s ease;
+    }
+
+    body.dark-mode .clock-container::after {
+      box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+    }
+
+    .clock-container {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 让小组件看起来更 "独立" */
+    .clock-container {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
+    }
+
+    body.dark-mode .clock-container {
+      box-shadow: 0 20px 56px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="clock-container" role="main" aria-label="PointLink 桌面小组件时钟">
+    <!-- 品牌标识 PointLink -->
+    <div class="brand-name">PointLink</div>
+
+    <!-- 时间显示区域 -->
+    <div class="time-display" id="timeDisplay">
+      <span id="hours">00</span>
+      <span class="colon-sep">:</span>
+      <span id="minutes">00</span>
+      <span class="seconds" id="seconds">00</span>
+    </div>
+
+    <!-- 日期显示 -->
+    <div class="date-display" id="dateDisplay">2026年8月12日 周三</div>
+
+    <!-- 控制栏：模式切换 + 图标 (纯SF风格) -->
+    <div class="controls">
+      <button class="mode-toggle" id="modeToggle" aria-label="切换深色/浅色模式">
+        <span class="icon-symbol" id="modeIcon">◐</span>
+        <span class="mode-label" id="modeLabel">浅色</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // DOM 元素
+      const hoursEl = document.getElementById('hours');
+      const minutesEl = document.getElementById('minutes');
+      const secondsEl = document.getElementById('seconds');
+      const dateDisplay = document.getElementById('dateDisplay');
+      const modeToggle = document.getElementById('modeToggle');
+      const modeIcon = document.getElementById('modeIcon');
+      const modeLabel = document.getElementById('modeLabel');
+      const body = document.body;
+
+      // 状态
+      let isDarkMode = false;
+      let timerInterval = null;
+
+      // ---------- 辅助函数 ----------
+      function padZero(num) {
+        return String(num).padStart(2, '0');
+      }
+
+      // 获取中文日期 (不使用 emoji)
+      function getChineseDate(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const weekday = weekdays[date.getDay()];
+        return `${year}年${month}月${day}日 ${weekday}`;
+      }
+
+      // 更新时钟
+      function updateClock() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+
+        hoursEl.textContent = padZero(hours);
+        minutesEl.textContent = padZero(minutes);
+        secondsEl.textContent = padZero(seconds);
+
+        // 更新日期
+        dateDisplay.textContent = getChineseDate(now);
+      }
+
+      // ---------- 深色模式切换 (带过渡动画) ----------
+      function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+
+        if (isDarkMode) {
+          body.classList.add('dark-mode');
+          modeIcon.textContent = '◑';    // 半月/暗色图标 (SF 风格)
+          modeLabel.textContent = '深色';
+        } else {
+          body.classList.remove('dark-mode');
+          modeIcon.textContent = '◐';    // 太阳/亮色图标
+          modeLabel.textContent = '浅色';
+        }
+
+        // 保存用户偏好
+        try {
+          localStorage.setItem('clockDarkMode', isDarkMode ? 'dark' : 'light');
+        } catch (e) { /* ignore */ }
+      }
+
+      // 恢复用户偏好
+      function loadUserPreference() {
+        try {
+          const stored = localStorage.getItem('clockDarkMode');
+          if (stored === 'dark') {
+            isDarkMode = true;
+            body.classList.add('dark-mode');
+            modeIcon.textContent = '◑';
+            modeLabel.textContent = '深色';
+          } else if (stored === 'light') {
+            isDarkMode = false;
+            body.classList.remove('dark-mode');
+            modeIcon.textContent = '◐';
+            modeLabel.textContent = '浅色';
+          } else {
+            // 跟随系统 (如果系统深色则默认深色)
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              isDarkMode = true;
+              body.classList.add('dark-mode');
+              modeIcon.textContent = '◑';
+              modeLabel.textContent = '深色';
+            } else {
+              isDarkMode = false;
+              body.classList.remove('dark-mode');
+              modeIcon.textContent = '◐';
+              modeLabel.textContent = '浅色';
+            }
+          }
+        } catch (e) {
+          // 默认浅色
+          isDarkMode = false;
+          body.classList.remove('dark-mode');
+          modeIcon.textContent = '◐';
+          modeLabel.textContent = '浅色';
+        }
+      }
+
+      // ---------- 初始化 ----------
+      function init() {
+        loadUserPreference();
+        updateClock();
+
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(updateClock, 1000);
+
+        modeToggle.addEventListener('click', toggleDarkMode);
+      }
+
+      // 页面完全加载后启动
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+
+      window.addEventListener('beforeunload', function() {
+        if (timerInterval) clearInterval(timerInterval);
+      });
+
+    })();
+  </script>
+</body>
+  </html>
